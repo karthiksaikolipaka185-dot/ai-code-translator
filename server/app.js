@@ -8,7 +8,7 @@ const app = express();
 
 // Enable CORS
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: process.env.CLIENT_URL || 'https://ai-smart-code-translator.onrender.com',
 }));
 
 // Parse JSON payloads
