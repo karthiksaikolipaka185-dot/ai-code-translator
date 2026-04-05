@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import CodeEditor from '../components/CodeEditor.jsx';
 import LanguageSelector from '../components/LanguageSelector.jsx';
 import OutputPanel from '../components/OutputPanel.jsx';
+import DiffEditor from '../components/DiffEditor.jsx';
 import { STARTER_CODE } from '../constants/languages.js';
 import { translateCode, analyzeCode, optimizeCode, explainCode } from '../services/codeService.js';
 import './home.css';
@@ -15,6 +16,7 @@ const HomePage = () => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
 
   // 1. Synchronize origin updates natively clearing unlinked response artifacts
   const handleSourceChange = (langId) => {
@@ -117,74 +119,125 @@ const HomePage = () => {
             </button>
           ))}
         </div>
-        <button className="run-btn" onClick={handleRun} disabled={loading}>
-          {loading ? 'Running...' : 'Run'}
-        </button>
+        <div className="toolbar-actions">
+          {(activeAction === 'translate' || activeAction === 'optimize') && (
+            <button 
+              className={`compare-toggle ${compareMode ? 'active' : ''}`}
+              onClick={() => setCompareMode(!compareMode)}
+              title="Toggle Side-by-Side Comparison"
+            >
+              {compareMode ? 'Single View' : 'Compare View'}
+            </button>
+          )}
+          <button className="run-btn" onClick={handleRun} disabled={loading}>
+            {loading ? 'Running...' : 'Run'}
+          </button>
+        </div>
       </div>
 
       {/* Primary Workspace Grid */}
-      <div className="workspace">
-        
-        {/* 2. Layout: Left Input Matrix */}
-        <div className="panel left-panel">
-          <div className="panel-header">
-            <LanguageSelector 
-              value={sourceLanguage} 
-              onChange={handleSourceChange} 
-            />
-          </div>
-          <div className="editor-wrapper">
-            <CodeEditor 
-              language={sourceLanguage}
-              value={code}
-              onChange={setCode}
-            />
-          </div>
-        </div>
-
-        {/* 3. Layout: Middle Gap & Transform Hook */}
-        <div className="middle-panel">
-          {activeAction === 'translate' && (
-            <button className="swap-btn" onClick={handleSwap} title="Swap Languages">
-              ⇄
-            </button>
-          )}
-        </div>
-
-        {/* 4. Layout: Right Analysis Vector */}
-        <div className="panel right-panel">
-          <div className="panel-header">
-            {activeAction === 'translate' ? (
-              <LanguageSelector 
-                value={targetLanguage} 
-                onChange={(val) => {
-                  setTargetLanguage(val);
-                  setResult(null);
-                }} 
-              />
-            ) : (
-              <div className="panel-title">Output</div>
-            )}
-            
-            {result && (
+      <div className={`workspace ${compareMode && result ? 'compare-active' : ''}`}>
+        {compareMode && result && (activeAction === 'translate' || activeAction === 'optimize') ? (
+          <div className="full-panel">
+            <div className="panel-header">
+              <div className="panel-title">
+                Comparison: {sourceLanguage} ➔ {targetLanguage || sourceLanguage}
+              </div>
               <button className="copy-btn" onClick={handleCopy}>
-                {copied ? 'Copied!' : 'Copy'}
+                {copied ? 'Copied!' : 'Copy Result'}
               </button>
+            </div>
+            <DiffEditor 
+              originalLanguage={sourceLanguage}
+              modifiedLanguage={activeAction === 'translate' ? targetLanguage : sourceLanguage}
+              originalCode={code}
+              modifiedCode={activeAction === 'translate' ? result.translatedCode : result.optimizedCode}
+              height="600px"
+            />
+            {activeAction === 'optimize' && result.improvements && (
+              <div className="improvements-container">
+                <h3>Key Improvements</h3>
+                <ul className="improvements-list">
+                  {result.improvements.map((imp, idx) => (
+                    <li key={idx}>{imp}</li>
+                  ))}
+                </ul>
+                {result.explanation && (
+                  <div className="explanation-section">
+                    <h4>Context</h4>
+                    <p>{result.explanation}</p>
+                  </div>
+                )}
+              </div>
             )}
           </div>
-          
-          <div className="output-wrapper">
-            {loading ? (
-              <div className="loading-state">Processing with AI...</div>
-            ) : (
-              <OutputPanel 
-                action={activeAction} 
-                result={result} 
-                targetLanguage={targetLanguage} 
-              />
-            )}
-          </div>
-        </div>
+        ) : (
+          <>
+            {/* 2. Layout: Left Input Matrix */}
+            <div className="panel left-panel">
+              <div className="panel-header">
+                <LanguageSelector 
+                  label="Source:"
+                  value={sourceLanguage} 
+                  onChange={handleSourceChange} 
+                />
+              </div>
+              <div className="editor-wrapper">
+                <CodeEditor 
+                  language={sourceLanguage}
+                  value={code}
+                  onChange={setCode}
+                />
+              </div>
+            </div>
+
+            {/* 3. Layout: Middle Gap & Transform Hook */}
+            <div className="middle-panel">
+              {activeAction === 'translate' && (
+                <button className="swap-btn" onClick={handleSwap} title="Swap Languages">
+                  ⇄
+                </button>
+              )}
+            </div>
+
+            {/* 4. Layout: Right Analysis Vector */}
+            <div className="panel right-panel">
+              <div className="panel-header">
+                {activeAction === 'translate' ? (
+                  <LanguageSelector 
+                    label="Target:"
+                    value={targetLanguage} 
+                    exclude={['auto']}
+                    onChange={(val) => {
+                      setTargetLanguage(val);
+                      setResult(null);
+                    }} 
+                  />
+                ) : (
+                  <div className="panel-title">Output</div>
+                )}
+                
+                {result && (
+                  <button className="copy-btn" onClick={handleCopy}>
+                    {copied ? 'Copied!' : 'Copy'}
+                  </button>
+                )}
+              </div>
+              
+              <div className="output-wrapper">
+                {loading ? (
+                  <div className="loading-state">Processing with AI...</div>
+                ) : (
+                  <OutputPanel 
+                    action={activeAction} 
+                    result={result} 
+                    targetLanguage={targetLanguage} 
+                  />
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

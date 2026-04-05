@@ -4,7 +4,8 @@ import { cleanCodeResponse } from "../utils/prompts.utils.js";
 import { getLanguageName } from "../constants/languages.js";
 
 export const translateCode = async (code, sourceLang, targetLang) => {
-  const sourceName = getLanguageName(sourceLang);
+  const isAuto = sourceLang === "auto";
+  const sourceName = isAuto ? "Auto-Detect" : getLanguageName(sourceLang);
   const targetName = getLanguageName(targetLang);
   
   const prompt = TRANSLATE_PROMPT(code, sourceName, targetName);

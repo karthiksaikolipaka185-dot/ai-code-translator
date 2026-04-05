@@ -1,14 +1,21 @@
 export const TRANSLATE_PROMPT = (code, sourceLang, targetLang) => `
-Translate the following code from ${sourceLang} to ${targetLang}.
-Strict Instructions:
-- ONLY return the translated code.
-- No explanations or additional text.
-- Preserve logic exactly.
-- Use idiomatic syntax for ${targetLang}.
-- Include any required imports or headers for ${targetLang}.
-- DO NOT use markdown code blocks or wrapper backticks.
+You are an expert polyglot software engineer with deep knowledge of ${sourceLang === "Auto-Detect" ? "all programming languages" : sourceLang} and ${targetLang}.
 
-Code to translate:
+Task: Translate the provided code snippet ${sourceLang === "Auto-Detect" ? "by first identifying its source language" : `from ${sourceLang}`} into high-quality, idiomatic ${targetLang}.
+
+${sourceLang === "Auto-Detect" ? "1. Identify the source language of the input code." : ""}
+2. Translate the logic exactly while following the best practices and design patterns of ${targetLang}.
+3. Ensure all necessary imports, headers, or library references for ${targetLang} are included.
+4. Add meaningful comments in the translated code to explain complex transformations.
+5. Format the code for maximum readability.
+
+Strict Constraints:
+- ONLY return the translated code content.
+- DO NOT include markdown code blocks (no \`\`\` tags).
+- DO NOT include any introductory or concluding remarks.
+- DO NOT provide explanations outside of code comments.
+
+Code to Translate:
 ${code}
 `;
 
@@ -34,18 +41,19 @@ ${code}
 `;
 
 export const OPTIMIZE_PROMPT = (code, language) => `
-Optimize the following ${language} code.
-Strict Instructions:
-- Return JSON strictly matching the structure below.
-- Do NOT use markdown formatting.
-- Maintain the exact same functionality.
-- Improve performance and readability organically.
-- Apply modern best practices explicitly.
+Optimize the following ${language} code for better performance, readability, and modern best practices.
 
-JSON Format exactly:
+Strict Instructions:
+- Return a valid JSON object strictly matching the structure below.
+- DO NOT use markdown code blocks or wrapper backticks.
+- Maintain the exact functional parity.
+- improvements must be a bulleted list of 3-5 specific changes made.
+
+JSON Format:
 {
   "optimizedCode": "...",
-  "suggestions": "..."
+  "improvements": ["Improvement 1", "Improvement 2", ...],
+  "explanation": "Brief context for the changes"
 }
 
 Code:

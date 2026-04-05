@@ -52,16 +52,28 @@ const OutputPanel = ({ action, result, targetLanguage }) => {
           <h3>Optimized Code</h3>
           <div className="code-wrapper">
             <CodeEditor 
-              language="javascript" // Fallback language parsing generically if necessary
+              language={targetLanguage || 'javascript'} 
               value={result.optimizedCode} 
               readOnly={true} 
             />
           </div>
         </div>
-        <div className="suggestions-section">
-          <h3>Suggestions</h3>
-          <p>{result.suggestions}</p>
-        </div>
+        {result.improvements && (
+          <div className="improvements-section">
+            <h3>Key Improvements</h3>
+            <ul>
+              {result.improvements.map((imp, idx) => (
+                <li key={idx}>{imp}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {result.explanation && (
+          <div className="explanation-section">
+            <h3>Context</h3>
+            <p>{result.explanation}</p>
+          </div>
+        )}
       </div>
     );
   }
